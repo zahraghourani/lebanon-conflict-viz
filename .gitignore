@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+
+# Data (don't upload raw data to GitHub)
+data/raw/
+
+# VS Code
+.vscode/
