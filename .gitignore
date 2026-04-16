@@ -5,7 +5,7 @@ __pycache__/
 venv/
 
 # Data (don't upload raw data to GitHub)
-data/raw/
+# data/raw/
 
 # VS Code
 .vscode/
