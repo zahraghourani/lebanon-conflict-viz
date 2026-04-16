@@ -253,29 +253,7 @@ Install all at once:
 pip install streamlit pandas altair plotly requests python-dotenv
 ```
 
----
-
-## 🗂️ Key Design Decisions
-
-- **"Occupied Palestine"** used consistently everywhere (ACLED stores it as "Palestine")
-- **ACLED lag** (~1 week) is framed as a "hybrid temporal architecture" — GDELT provides real-time sentiment while ACLED provides verified ground truth
-- **Light academic color theme** for professional presentation
-- **Heatmap replaced** with connected dot plot (fatalities vs events per region) for clearer comparison
-
----
-
-## 📅 Project Timeline
-
-| Date      | Milestone                                                          |
-| --------- | ------------------------------------------------------------------ |
-| Apr 16    | Data collection complete, dashboard expanded to full Middle East   |
-| Apr 17–20 | Literature review (5 papers), preprocessing notebook, report draft |
-| Apr 21–25 | Polish dashboard, finalize report, prepare presentation            |
-| Apr 26    | **Submit by 11:59pm**                                              |
-| Apr 28    | **15-minute live demo presentation**                               |
-
----
 
 ## 👩‍💻 Author
 
-Zahra Ghourani — American University of Beirut
+Zahra Ghourani — Lebanese American University
