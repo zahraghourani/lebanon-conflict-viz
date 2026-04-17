@@ -1,127 +1,123 @@
 import requests
 import pandas as pd
+from io import StringIO
 import time
 import os
 
 os.makedirs("data/processed", exist_ok=True)
 
-# ── STRATEGY ──────────────────────────────────────────────────────────────────
-# GDELT's date-range API is flaky and often returns no data for older chunks.
-# Most reliable approach: use timespan parameter with a simple short query.
-# timespan=24m gives us ~2 years back from today which covers Jan 2024 → Apr 2025.
-# We run 3 different queries and merge results for better coverage.
+# OR terms wrapped in () as GDELT requires
+# Simple query — no startdatetime/enddatetime (flaky), instead we pull
+# each quarter separately using timespan trick via GDELT's supported params
+# GDELT date format: YYYYMMDDHHMMSS
 
-BASE_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
+BASE = "https://api.gdeltproject.org/api/v2/doc/doc"
+QUERY = "(lebanon+OR+palestine+OR+gaza+OR+syria+OR+yemen+OR+iraq)+conflict"
 
-QUERIES = [
-    ("conflict",  "war airstrike attack ceasefire"),
-    ("levant",    "lebanon gaza palestine syria"),
-    ("gulf",      "yemen iraq iran"),
+# Pull 4 quarters covering Jan 2024 → Apr 2025
+CHUNKS = [
+    ("20240101000000", "20240401000000", "Q1 2024"),
+    ("20240401000000", "20240701000000", "Q2 2024"),
+    ("20240701000000", "20241001000000", "Q3 2024"),
+    ("20241001000000", "20250101000000", "Q4 2024"),
+    ("20250101000000", "20250414000000", "Q1 2025"),
 ]
 
 
-def fetch(query_str, mode, label, retries=3):
+def fetch_chunk(mode, start, end, label):
     url = (
-        f"{BASE_URL}"
-        f"?query={requests.utils.quote(query_str)}"
+        f"{BASE}?query={QUERY}"
         f"&mode={mode}"
         f"&format=csv"
-        f"&timespan=24m"
+        f"&startdatetime={start}"
+        f"&enddatetime={end}"
     )
+    print(f"  {label}...", end=" ", flush=True)
+    time.sleep(30)  # strict rate limit respect
 
-    for attempt in range(1, retries + 1):
-        try:
-            print(f"  [{label}] attempt {attempt}...", end=" ", flush=True)
-            time.sleep(10)
+    try:
+        r = requests.get(url, timeout=120)
+        text = r.text.strip()
+
+        if not text or len(text) < 30:
+            print(f"empty/error: {text[:100]}")
+            return pd.DataFrame()
+
+        if "limit" in text.lower():
+            print(f"rate limited, waiting 60s...")
+            time.sleep(60)
             r = requests.get(url, timeout=120)
+            text = r.text.strip()
 
-            lines = [l for l in r.text.strip().split('\n') if l.strip()]
-            if len(lines) <= 1:
-                print("no data.")
-                return pd.DataFrame()
+        if "OR" in text or "must be" in text or len(text) < 30:
+            print(f"API error: {text[:100]}")
+            return pd.DataFrame()
 
-            rows = [l.split(',') for l in lines[1:]]
-            df = pd.DataFrame(rows, columns=['date', 'series', 'value'])
-            df['date'] = pd.to_datetime(df['date'], errors='coerce')
-            df['value'] = pd.to_numeric(df['value'], errors='coerce')
-            df = df.dropna(subset=['date', 'value'])
-            df = df[df['value'] != 0]
+        df = pd.read_csv(StringIO(text))
+        if df.shape[1] >= 2:
+            df = df.iloc[:, :2]
+            df.columns = ['date', 'value']
+        else:
+            print(f"bad shape: {df.shape}")
+            return pd.DataFrame()
 
-            # keep only Jan 2024 → Apr 2025
-            df = df[
-                (df['date'] >= '2024-01-01') &
-                (df['date'] <= '2025-04-14')
-            ]
+        df['date']  = pd.to_datetime(df['date'],  errors='coerce')
+        df['value'] = pd.to_numeric(df['value'],  errors='coerce')
+        df = df.dropna()
+        df = df[df['value'] != 0]
+        print(f"{len(df)} rows ✓")
+        return df
 
-            print(f"{len(df)} rows ✓")
-            return df
-
-        except requests.exceptions.Timeout:
-            print(f"timeout.", end=" ")
-            if attempt < retries:
-                print(f"waiting 20s...")
-                time.sleep(20)
-            else:
-                print("skipping.")
-                return pd.DataFrame()
-
-        except Exception as e:
-            print(f"error: {e}")
-            time.sleep(15)
-
-    return pd.DataFrame()
-
-
-def fetch_mode(mode, col_name):
-    print(f"\n━━━ GDELT {col_name.upper()} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    frames = []
-
-    for label, query in QUERIES:
-        df = fetch(query, mode, label)
-        if not df.empty:
-            frames.append(df)
-        time.sleep(8)
-
-    if not frames:
-        print("  ✗ No data collected.")
+    except Exception as e:
+        print(f"error: {e}")
         return pd.DataFrame()
 
-    # merge: for same date across queries, take the mean
+
+def fetch_all(mode, col_name):
+    print(f"\n━━━ {col_name.upper()} ━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    frames = []
+    for start, end, label in CHUNKS:
+        df = fetch_chunk(mode, start, end, label)
+        if not df.empty:
+            frames.append(df)
+
+    if not frames:
+        print("  No data collected.")
+        return pd.DataFrame()
+
     combined = (
         pd.concat(frames, ignore_index=True)
-        .groupby('date')['value']
-        .mean()
-        .reset_index()
-        .rename(columns={'value': col_name})
+        .drop_duplicates(subset=['date'])
         .sort_values('date')
         .reset_index(drop=True)
+        .rename(columns={'value': col_name})
     )
-
-    print(f"\n  ✓ {len(combined)} data points")
+    print(f"\n  Total: {len(combined)} data points")
     print(f"  Range: {combined['date'].min().date()} → {combined['date'].max().date()}")
     return combined
 
 
-# ── RUN ───────────────────────────────────────────────────────────────────────
-df_tone = fetch_mode("timelinetone", "tone")
+print("=" * 50)
+print("GDELT — Jan 2024 → Apr 2025")
+print("Each chunk waits 30s — takes ~5 mins total")
+print("=" * 50)
+
+df_tone = fetch_all("timelinetone", "tone")
+df_vol  = fetch_all("timelinevol",  "volume")
+
 if not df_tone.empty:
     df_tone.to_csv("data/processed/gdelt_tone.csv", index=False)
-    print(f"  Avg tone         : {df_tone['tone'].mean():.2f}")
+    print(f"\n✓ Tone saved — avg: {df_tone['tone'].mean():.2f}")
     print(f"  Most negative day: {df_tone.loc[df_tone['tone'].idxmin(), 'date'].date()}")
-    print(f"  Saved → data/processed/gdelt_tone.csv ✓")
+else:
+    print("\n⚠ No tone data saved")
 
-df_vol = fetch_mode("timelinevol", "volume")
 if not df_vol.empty:
     df_vol.to_csv("data/processed/gdelt_volume.csv", index=False)
-    print(f"  Peak day         : {df_vol.loc[df_vol['volume'].idxmax(), 'date'].date()}")
-    print(f"  Saved → data/processed/gdelt_volume.csv ✓")
+    print(f"\n✓ Volume saved — peak: {df_vol.loc[df_vol['volume'].idxmax(), 'date'].date()}")
+else:
+    print("\n⚠ No volume data saved")
 
-print("\n══════════════════════════════════════════")
-print("GDELT PULL COMPLETE")
-print(f"  Tone points  : {len(df_tone) if not df_tone.empty else 0}")
-print(f"  Volume points: {len(df_vol) if not df_vol.empty else 0}")
-if not df_tone.empty:
-    print(f"  Tone range   : {df_tone['date'].min().date()} → {df_tone['date'].max().date()}")
-if not df_vol.empty:
-    print(f"  Volume range : {df_vol['date'].min().date()} → {df_vol['date'].max().date()}")
-print("══════════════════════════════════════════")
+print("\n" + "=" * 50)
+print(f"DONE — Tone: {len(df_tone)} pts | Volume: {len(df_vol)} pts")
+print("=" * 50)

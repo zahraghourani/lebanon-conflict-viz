@@ -1,12 +1,8 @@
 pandas
 requests
 altair
-vega_datasets
 streamlit
-praw
-textblob
-nltk
-geopandas
 plotly
 python-dotenv
-notebook
+textblob
+nltk
