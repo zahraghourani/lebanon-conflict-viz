@@ -16,6 +16,8 @@ from charts     import (
     make_sentiment_chart,
     make_volume_chart,
     make_top_posts_table,
+    make_event_type_heatmap,
+    make_fatality_intensity_scatter,
     EVENT_COLORS,
 )
 
@@ -177,6 +179,22 @@ st.altair_chart(make_dot_plot(filtered), use_container_width=True)
 
 st.markdown("---")
 
+# ── SECTION 3B — ADVANCED ANALYSIS ────────────────────────────────────────────
+
+st.subheader("🔬 Advanced Analysis")
+
+tab_heat, tab_intensity = st.tabs(["Event Type Distribution", "Fatality Intensity"])
+
+with tab_heat:
+    st.caption("Heatmap showing which event types occur most frequently in each country.")
+    st.altair_chart(make_event_type_heatmap(filtered), use_container_width=True)
+
+with tab_intensity:
+    st.caption("Scatter plot showing the lethality of events (fatalities per event) by country. Larger bubbles indicate higher total fatalities.")
+    st.altair_chart(make_fatality_intensity_scatter(filtered), use_container_width=True)
+
+st.markdown("---")
+
 # ── SECTION 4 — REDDIT SENTIMENT ─────────────────────────────────────────────
 
 st.subheader("💬 Public Voice — Reddit Sentiment & Volume")
@@ -200,5 +218,6 @@ st.markdown("---")
 st.caption(
     "Sources: ACLED (acleddata.com) · Reddit via Pullpush.io · "
     "Sentiment: TextBlob · Built with Streamlit + Altair + Plotly · "
-    "Conflict data Jan 2024 – Apr 2025"
+    "Conflict data Jan 2024 – Apr 2025 · "
+    "Enhanced with improved filtering, error handling, and advanced analytics"
 )

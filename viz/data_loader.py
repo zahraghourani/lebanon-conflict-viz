@@ -1,38 +1,94 @@
 # all data loading and caching
 import streamlit as st
 import pandas as pd
+import os
 
 
 @st.cache_data(ttl=3600)
 def load_acled():
-    df = pd.read_csv("data/raw/acled_middle_east.csv", low_memory=False)
-    df['event_date']     = pd.to_datetime(df['event_date'])
-    df['fatalities']     = pd.to_numeric(df['fatalities'], errors='coerce').fillna(0).astype(int)
-    df['latitude']       = pd.to_numeric(df['latitude'],   errors='coerce')
-    df['longitude']      = pd.to_numeric(df['longitude'],  errors='coerce')
-    df['fatalities_size'] = df['fatalities'] + 1
-    df['year_month']     = df['event_date'].dt.strftime('%Y-%m')
-    df['month']          = df['event_date'].dt.to_period('M').astype(str)
-    # fix Palestine naming
-    df['country'] = df['country'].replace('Palestine', 'Occupied Palestine')
-    return df
+    """Load and preprocess ACLED conflict event data."""
+    filepath = "data/raw/acled_middle_east.csv"
+    
+    if not os.path.exists(filepath):
+        st.error(f"❌ Data file not found: {filepath}. Please run the data collection scripts first.")
+        return pd.DataFrame()
+    
+    try:
+        df = pd.read_csv(filepath, low_memory=False)
+        
+        # Validate required columns
+        required_cols = ['event_date', 'fatalities', 'latitude', 'longitude', 'country', 'event_type']
+        missing = [col for col in required_cols if col not in df.columns]
+        if missing:
+            st.warning(f"⚠️ Missing columns in ACLED data: {missing}")
+        
+        df['event_date']     = pd.to_datetime(df['event_date'], errors='coerce')
+        df['fatalities']     = pd.to_numeric(df['fatalities'], errors='coerce').fillna(0).astype(int)
+        df['latitude']       = pd.to_numeric(df['latitude'],   errors='coerce')
+        df['longitude']      = pd.to_numeric(df['longitude'],  errors='coerce')
+        
+        # Remove rows with invalid coordinates
+        df = df.dropna(subset=['latitude', 'longitude'])
+        
+        df['fatalities_size'] = df['fatalities'] + 1
+        df['year_month']     = df['event_date'].dt.strftime('%Y-%m')
+        df['month']          = df['event_date'].dt.to_period('M').astype(str)
+        
+        # Fix Palestine naming for consistency
+        df['country'] = df['country'].replace('Palestine', 'Occupied Palestine')
+        
+        return df
+    except Exception as e:
+        st.error(f"❌ Error loading ACLED data: {str(e)}")
+        return pd.DataFrame()
 
 
 @st.cache_data(ttl=3600)
 def load_reddit():
-    posts = pd.read_csv("data/raw/reddit_posts_middle_east.csv")
-    posts['created_date'] = pd.to_datetime(posts['created_date'], errors='coerce')
-    posts['score']        = pd.to_numeric(posts['score'],        errors='coerce').fillna(0)
-    posts['year_month']   = posts['created_date'].dt.strftime('%Y-%m')
-    # drop very low engagement noise
-    posts = posts[posts['score'] >= 1].copy()
-    return posts
+    """Load and preprocess Reddit posts data."""
+    filepath = "data/raw/reddit_posts_middle_east.csv"
+    
+    if not os.path.exists(filepath):
+        st.warning(f"⚠️ Reddit posts file not found: {filepath}")
+        return pd.DataFrame()
+    
+    try:
+        posts = pd.read_csv(filepath)
+        posts['created_date'] = pd.to_datetime(posts['created_date'], errors='coerce')
+        posts['score']        = pd.to_numeric(posts['score'],        errors='coerce').fillna(0)
+        posts['year_month']   = posts['created_date'].dt.strftime('%Y-%m')
+        
+        # Ensure title and selftext columns exist
+        if 'title' not in posts.columns:
+            posts['title'] = ''
+        if 'selftext' not in posts.columns:
+            posts['selftext'] = ''
+        
+        # Drop very low engagement noise
+        posts = posts[posts['score'] >= 1].copy()
+        
+        return posts
+    except Exception as e:
+        st.warning(f"⚠️ Error loading Reddit posts: {str(e)}")
+        return pd.DataFrame()
 
 
 @st.cache_data(ttl=3600)
 def load_reddit_comments():
-    comments = pd.read_csv("data/raw/reddit_comments_middle_east.csv")
-    comments['created_date'] = pd.to_datetime(comments['created_date'], errors='coerce')
-    comments['score']        = pd.to_numeric(comments['score'], errors='coerce').fillna(0)
-    comments['year_month']   = comments['created_date'].dt.strftime('%Y-%m')
-    return comments
+    """Load and preprocess Reddit comments data."""
+    filepath = "data/raw/reddit_comments_middle_east.csv"
+    
+    if not os.path.exists(filepath):
+        st.warning(f"⚠️ Reddit comments file not found: {filepath}")
+        return pd.DataFrame()
+    
+    try:
+        comments = pd.read_csv(filepath)
+        comments['created_date'] = pd.to_datetime(comments['created_date'], errors='coerce')
+        comments['score']        = pd.to_numeric(comments['score'], errors='coerce').fillna(0)
+        comments['year_month']   = comments['created_date'].dt.strftime('%Y-%m')
+        
+        return comments
+    except Exception as e:
+        st.warning(f"⚠️ Error loading Reddit comments: {str(e)}")
+        return pd.DataFrame()

@@ -305,3 +305,60 @@ def make_top_posts_table(posts: pd.DataFrame, n: int = 10) -> pd.DataFrame:
     )
     top.index += 1
     return top
+
+
+def make_event_type_heatmap(filtered: pd.DataFrame) -> alt.Chart:
+    """
+    Heatmap showing event type frequency by country.
+    Useful for identifying which event types are prevalent in each region.
+    """
+    heatmap_data = (
+        filtered
+        .groupby(['country', 'event_type'])
+        .size()
+        .reset_index(name='count')
+    )
+    
+    return alt.Chart(heatmap_data).mark_rect().encode(
+        x=alt.X('event_type:N', title='Event Type'),
+        y=alt.Y('country:N', title='Country'),
+        color=alt.Color('count:Q', scale=alt.Scale(scheme='reds'), title='Count'),
+        tooltip=['country:N', 'event_type:N', 'count:Q']
+    ).properties(
+        title='Event Type Distribution by Country',
+        width=600,
+        height=max(300, len(filtered['country'].unique()) * 20)
+    )
+
+
+def make_fatality_intensity_scatter(filtered: pd.DataFrame) -> alt.Chart:
+    """
+    Scatter plot showing fatality intensity (fatalities per event) by country.
+    Helps identify which regions have more lethal events on average.
+    """
+    intensity = (
+        filtered
+        .groupby('country')
+        .agg(
+            total_events=('event_type', 'count'),
+            total_fatalities=('fatalities', 'sum')
+        )
+        .reset_index()
+    )
+    intensity['fatality_intensity'] = intensity['total_fatalities'] / intensity['total_events']
+    intensity = intensity[intensity['total_events'] >= 10]  # Filter for significance
+    
+    return alt.Chart(intensity).mark_circle(size=200).encode(
+        x=alt.X('total_events:Q', title='Total Events', scale=alt.Scale(type='log')),
+        y=alt.Y('fatality_intensity:Q', title='Avg Fatalities per Event'),
+        color=alt.Color('total_fatalities:Q', scale=alt.Scale(scheme='oranges'), title='Total Fatalities'),
+        tooltip=[
+            alt.Tooltip('country:N', title='Country'),
+            alt.Tooltip('total_events:Q', title='Total Events'),
+            alt.Tooltip('total_fatalities:Q', title='Total Fatalities'),
+            alt.Tooltip('fatality_intensity:Q', title='Avg Fatalities/Event', format='.2f')
+        ]
+    ).properties(
+        title='Fatality Intensity by Country (Bubble size = Total Fatalities)',
+        height=350
+    )

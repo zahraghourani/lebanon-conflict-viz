@@ -68,8 +68,17 @@ def render_filters(acled: pd.DataFrame, posts: pd.DataFrame):
     filtered_posts = posts.copy()
     if len(drange) == 2:
         filtered_posts = filtered_posts[
-            (filtered_posts['created_date'].dt.date >= drange[0]) &
-            (filtered_posts['created_date'].dt.date <= drange[1])
+            (filtered_posts["created_date"].dt.date >= drange[0]) &
+            (filtered_posts["created_date"].dt.date <= drange[1])
+        ]
+
+    # Further filter Reddit posts by country keywords if available
+    if sel_countries:
+        # Create a regex pattern to match any of the selected countries in the post title or selftext
+        country_pattern = "|".join(sel_countries)
+        filtered_posts = filtered_posts[
+            filtered_posts["title"].str.contains(country_pattern, case=False, na=False) |
+            filtered_posts["selftext"].str.contains(country_pattern, case=False, na=False)
         ]
 
     return filtered_acled, filtered_posts, sel_countries, drange
