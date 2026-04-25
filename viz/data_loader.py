@@ -27,8 +27,8 @@ def load_acled():
         df['latitude']       = pd.to_numeric(df['latitude'],   errors='coerce')
         df['longitude']      = pd.to_numeric(df['longitude'],  errors='coerce')
         
-        # Remove rows with invalid coordinates
-        df = df.dropna(subset=['latitude', 'longitude'])
+        # Remove rows with invalid coordinates or dates
+        df = df.dropna(subset=['latitude', 'longitude', 'event_date'])
         
         df['fatalities_size'] = df['fatalities'] + 1
         df['year_month']     = df['event_date'].dt.strftime('%Y-%m')
@@ -58,15 +58,20 @@ def load_reddit():
     
     try:
         posts = pd.read_csv(filepath)
+        
+        # --- DATA CLEANING (Ensures consistency even if raw file is loaded) ---
         posts['created_date'] = pd.to_datetime(posts['created_date'], errors='coerce')
+        posts = posts.dropna(subset=['created_date'])
+        
         posts['score']        = pd.to_numeric(posts['score'],        errors='coerce').fillna(0)
         posts['year_month']   = posts['created_date'].dt.strftime('%Y-%m')
         
         # Ensure title and selftext columns exist
-        if 'title' not in posts.columns:
-            posts['title'] = ''
-        if 'selftext' not in posts.columns:
-            posts['selftext'] = ''
+        for col in ['title', 'selftext']:
+            if col not in posts.columns:
+                posts[col] = ''
+            else:
+                posts[col] = posts[col].fillna('').astype(str)
         
         # Drop very low engagement noise
         posts = posts[posts['score'] >= 1].copy()
@@ -88,7 +93,11 @@ def load_reddit_comments():
     
     try:
         comments = pd.read_csv(filepath)
+        
+        # --- DATA CLEANING ---
         comments['created_date'] = pd.to_datetime(comments['created_date'], errors='coerce')
+        comments = comments.dropna(subset=['created_date'])
+        
         comments['score']        = pd.to_numeric(comments['score'], errors='coerce').fillna(0)
         comments['year_month']   = comments['created_date'].dt.strftime('%Y-%m')
         
