@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Middle East Conflict Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <div id="sidebar">
+    <h2>🔎 Filters</h2>
+    <label for="sel-countries">Country</label>
+    <select id="sel-countries" multiple></select>
+
+    <label for="sel-types">Event Type</label>
+    <select id="sel-types" multiple></select>
+
+    <label for="inp-date-from">Date From</label>
+    <input id="inp-date-from" type="date" />
+    <label for="inp-date-to">Date To</label>
+    <input id="inp-date-to" type="date" />
+
+    <button id="btn-apply">Apply Filters</button>
+    <button id="btn-clear">✕ Clear Filters</button>
+
+    <div class="sidebar-stats" id="sidebar-live-stats"></div>
+  </div>
+
+  <div id="main">
+    <div id="header">
+      <h1>🌍 Middle East Conflict Dashboard</h1>
+      <p>ACLED conflict events · Reddit sentiment · Jan 2024–Apr 2025</p>
+    </div>
+
+    <div id="metrics">
+      <div class="metric-card" id="m-events"></div>
+      <div class="metric-card" id="m-fatalities"></div>
+      <div class="metric-card" id="m-countries"></div>
+      <div class="metric-card" id="m-regions"></div>
+      <div class="metric-card" id="m-posts"></div>
+    </div>
+
+    <section id="sec-map">
+      <h2>📍 Where — Conflict Events Map</h2>
+      <div id="map-controls">
+        <button id="btn-heatmap" class="active">🌡️ Heatmap</button>
+        <button id="btn-detail">🔍 Country Detail</button>
+        <button id="btn-back" style="display:none">← Back</button>
+        <select id="country-drill" style="display:none">
+          <option value="">— select country —</option>
+        </select>
+      </div>
+      <div id="week-controls">
+        <button id="btn-play">▶ Play</button>
+        <button id="btn-pause" style="display:none">⏸ Pause</button>
+        <button id="btn-reset">⏮</button>
+        <input type="range" id="week-slider" min="0" value="0">
+        <span id="week-label"></span>
+        <label>
+          <input type="checkbox" id="show-all" checked> Show all weeks
+        </label>
+      </div>
+      <div id="map-row">
+        <div id="map-container"></div>
+        <div id="map-stats">
+          <h3>📊 Stats</h3>
+          <div id="stats-content"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-timeline">
+      <h2>📅 When — Conflict Timeline</h2>
+      <div id="tab-timeline" class="tab-controls">
+        <button class="tab active" data-tab="by-type">By event type</button>
+        <button class="tab" data-tab="by-country">By country</button>
+      </div>
+      <div id="chart-timeline-type"></div>
+      <div id="chart-timeline-country" style="display:none"></div>
+    </section>
+
+    <section id="sec-fatalities">
+      <h2>💔 Human Cost</h2>
+      <div id="fatalities-row">
+        <div id="chart-fat-monthly"></div>
+        <div id="chart-fat-country"></div>
+      </div>
+      <h3 style="margin: 20px 0 8px; font-size:15px;">
+        Events vs Fatalities by Country
+      </h3>
+      <p style="font-size:12px; color:#666; margin-bottom:12px;">
+        Blue = events (normalized) · Red = fatalities (normalized) ·
+        Gap shows lethality relative to activity
+      </p>
+      <div id="chart-dotplot"></div>
+    </section>
+
+    <section id="sec-reddit">
+      <h2>💬 Public Voice — Reddit Sentiment</h2>
+      <div id="reddit-row">
+        <div id="chart-sentiment"></div>
+        <div id="chart-volume"></div>
+      </div>
+      <h3>Most Upvoted Posts</h3>
+      <table id="posts-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Date</th><th>Subreddit</th>
+            <th>Title</th><th>Score</th><th>Sentiment</th><th>Link</th>
+          </tr>
+        </thead>
+        <tbody id="posts-tbody"></tbody>
+      </table>
+    </section>
+
+    <footer>
+      <p>ACLED · Reddit via Pullpush.io · VADER NLP · Vega-Altair · Plotly · D3.js</p>
+    </footer>
+  </div>
+
+  <script src="/static/js/filters.js"></script>
+  <script src="/static/js/charts.js"></script>
+  <script src="/static/js/map.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

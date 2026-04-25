@@ -31,8 +31,62 @@ def make_map(filtered: pd.DataFrame) -> px.scatter_mapbox:
     Click a dot to filter all charts to that location.
     Edit zoom and center here to change default map view.
     """
+    if filtered is None or filtered.empty:
+        fig = px.scatter_mapbox()
+        fig.update_layout(
+            mapbox_style="carto-positron",
+            height=560,
+            margin=dict(l=0, r=0, t=0, b=0),
+            annotations=[
+                dict(
+                    text="No map data for current filters.",
+                    x=0.5, y=0.5, xref="paper", yref="paper",
+                    showarrow=False, font=dict(size=14, color="#666")
+                )
+            ]
+        )
+        return fig
+
+    df = filtered.copy()
+    if "week" not in df.columns and "event_date" in df.columns:
+        df["week"] = df["event_date"].dt.to_period("W").apply(
+            lambda r: r.start_time.strftime("%b %d, %Y")
+        )
+
+    df["latitude"] = pd.to_numeric(df["latitude"], errors="coerce")
+    df["longitude"] = pd.to_numeric(df["longitude"], errors="coerce")
+    if "fatalities_size" not in df.columns:
+        df["fatalities_size"] = pd.to_numeric(df["fatalities"], errors="coerce").fillna(0) + 1
+    df = df.dropna(subset=["latitude", "longitude"])
+
+    if df.empty:
+        fig = px.scatter_mapbox()
+        fig.update_layout(
+            mapbox_style="carto-positron",
+            height=560,
+            margin=dict(l=0, r=0, t=0, b=0),
+            annotations=[
+                dict(
+                    text="No valid coordinates available for map plotting.",
+                    x=0.5, y=0.5, xref="paper", yref="paper",
+                    showarrow=False, font=dict(size=14, color="#666")
+                )
+            ]
+        )
+        return fig
+
+    if len(df) > 3000:
+        df = df.sample(3000, random_state=42)
+
+    if "date_str" not in df.columns:
+        df["date_str"] = pd.to_datetime(df["event_date"], errors="coerce").dt.strftime("%b %d, %Y")
+    if "actor1" not in df.columns:
+        df["actor1"] = "Unknown"
+    else:
+        df["actor1"] = df["actor1"].fillna("Unknown")
+
     fig = px.scatter_mapbox(
-        filtered,
+        df,
         lat='latitude',
         lon='longitude',
         color='event_type',
@@ -40,21 +94,12 @@ def make_map(filtered: pd.DataFrame) -> px.scatter_mapbox:
         size='fatalities_size',
         size_max=15,  # Further reduced for better clarity in dense areas
         hover_name='location',
-        hover_data={
-            'event_date':      True,
-            'event_type':      True,
-            'fatalities':      True,
-            'actor1':          True,
-            'country':         True,
-            'latitude':        False,
-            'longitude':       False,
-            'fatalities_size': False
-        },
+        custom_data=["date_str", "event_type", "fatalities", "actor1"],
         zoom=4,
         center={"lat": 29.0, "lon": 40.0},   # centered on Middle East
         height=560,
-        mapbox_style="stamen-terrain",
-        opacity=0.5,  # Further reduced opacity to better visualize point density
+        mapbox_style="carto-positron",
+        opacity=0.65,
     )
     fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),
@@ -63,6 +108,16 @@ def make_map(filtered: pd.DataFrame) -> px.scatter_mapbox:
             bgcolor="rgba(255,255,255,0.9)",
             bordercolor="#ddd",
             borderwidth=1
+        )
+    )
+    fig.update_traces(
+        hovertemplate=(
+            "<b>%{hovertext}</b><br>"
+            "📅 %{customdata[0]}<br>"
+            "⚡ %{customdata[1]}<br>"
+            "💔 Fatalities: %{customdata[2]}<br>"
+            "👤 %{customdata[3]}<br>"
+            "<extra></extra>"
         )
     )
     return fig

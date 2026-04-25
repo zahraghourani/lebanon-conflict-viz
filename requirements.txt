@@ -6,3 +6,8 @@ plotly
 python-dotenv
 textblob
 nltk
+fastapi
+uvicorn[standard]
+python-multipart
+vaderSentiment
+numpy
