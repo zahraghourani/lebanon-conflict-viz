@@ -10,8 +10,11 @@ def compute_sentiment(posts: pd.DataFrame) -> pd.DataFrame:
     """
     Adds a sentiment polarity score to each Reddit post based on its title.
     Returns the posts dataframe with a new 'sentiment' column.
-    Edit the source column here if you want to analyze selftext instead.
+    If 'sentiment' already exists (pre-calculated), it skips the heavy computation.
     """
+    if 'sentiment' in posts.columns:
+        return posts
+
     try:
         from textblob import TextBlob
     except ImportError:

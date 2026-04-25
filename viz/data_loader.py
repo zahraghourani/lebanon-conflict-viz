@@ -46,7 +46,11 @@ def load_acled():
 @st.cache_data(ttl=3600)
 def load_reddit():
     """Load and preprocess Reddit posts data."""
-    filepath = "data/raw/reddit_posts_middle_east.csv"
+    # Try to load pre-calculated sentiment first for performance
+    processed_path = "data/processed/reddit_posts_with_sentiment.csv"
+    raw_path = "data/raw/reddit_posts_middle_east.csv"
+    
+    filepath = processed_path if os.path.exists(processed_path) else raw_path
     
     if not os.path.exists(filepath):
         st.warning(f"⚠️ Reddit posts file not found: {filepath}")
