@@ -35,7 +35,7 @@ def load_acled():
         df['month']          = df['event_date'].dt.to_period('M').astype(str)
         
         # Fix Palestine naming for consistency
-        df['country'] = df['country'].replace('Palestine', 'Occupied Palestine')
+        df['country'] = df['country'].replace(['Palestine', 'Israel'], 'Occupied Palestine')
         
         return df
     except Exception as e:

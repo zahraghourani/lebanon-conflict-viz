@@ -31,6 +31,13 @@ def main():
     # 3. Add derived fields
     df['year_month'] = df['created_date'].dt.strftime('%Y-%m')
     
+    # 3.5 Rename Israel to Palestine in any country-related fields if they exist
+    if 'country' in df.columns:
+        df['country'] = df['country'].replace(['Israel', 'Palestine'], 'Occupied Palestine')
+    
+    # Also replace in text for consistency if desired, but primarily for filtering
+    # df['title'] = df['title'].str.replace('Israel', 'Palestine', case=False)
+    
     # 4. Ensure text columns exist and are strings
     for col in ['title', 'selftext']:
         if col not in df.columns:

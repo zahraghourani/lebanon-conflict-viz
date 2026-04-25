@@ -39,7 +39,7 @@ middle-east-conflict-viz/
 ├── .env                            # Your API credentials (never commit)
 ├── .gitignore
 ├── requirements.txt
-└── README.md
+├── README.md
 ```
 
 ---
@@ -97,7 +97,7 @@ Run the three scripts **in order**. All data is saved to `data/raw/` and `data/p
 **What it does:** Downloads verified conflict event data with GPS coordinates, event types, actors, and fatalities for 17 Middle East countries from Jan 2024 to Apr 2025.
 
 **Countries covered:**
-Lebanon, Occupied Palestine, Syria, Israel, Jordan, Yemen, Saudi Arabia, Iraq, Kuwait, Bahrain, Qatar, UAE, Oman, Egypt, Libya, Iran, Turkey
+Lebanon, Occupied Palestine, Syria, Jordan, Yemen, Saudi Arabia, Iraq, Kuwait, Bahrain, Qatar, UAE, Oman, Egypt, Libya, Iran, Turkey
 
 **Run it:**
 
@@ -202,7 +202,7 @@ Then open your browser at: **http://localhost:8501**
 - 📰 **GDELT sentiment** — real-time media tone line chart (updates every 15 min)
 - 📊 **GDELT volume** — media coverage area chart
 - 💔 **Fatalities** — monthly and by-region charts
-- 🔵 **Connected dot plot** — fatalities vs events per region
+- ⚖️ **Connected dot plot** — fatalities vs events per region
 - 🔽 **Sidebar filters** — country, region, event type, date range
 
 ---
@@ -245,12 +245,13 @@ altair
 plotly
 requests
 python-dotenv
+textblob
 ```
 
 Install all at once:
 
 ```bash
-pip install streamlit pandas altair plotly requests python-dotenv
+pip install streamlit pandas altair plotly requests python-dotenv textblob
 ```
 
 
