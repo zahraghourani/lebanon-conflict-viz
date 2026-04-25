@@ -137,15 +137,18 @@ with col_stats:
         for _, row in loc_data.sort_values('event_date', ascending=False).head(3).iterrows():
             st.caption(f"{row['event_date'].date()} · {row['event_type']} · {int(row['fatalities'])} fatalities")
     else:
-        st.markdown("**Top locations:**")
-        top_locs = (
-            filtered.groupby('location')
-            .agg(events=('event_type', 'count'), fatalities=('fatalities', 'sum'))
-            .sort_values('events', ascending=False)
-            .head(7)
-        )
-        for loc, row in top_locs.iterrows():
-            st.markdown(f"**{loc}** — {row['events']} events, {int(row['fatalities'])} fatalities")
+        st.markdown("**Top locations (selected period):**")
+        if not filtered.empty:
+            top_locs = (
+                filtered.groupby('location')
+                .agg(events=('event_type', 'count'), fatalities=('fatalities', 'sum'))
+                .sort_values('events', ascending=False)
+                .head(7)
+            )
+            for loc, row in top_locs.iterrows():
+                st.markdown(f"**{loc}** — {row['events']} events, {int(row['fatalities'])} fatalities")
+        else:
+            st.write("No data for selected filters.")
 
 st.markdown("---")
 

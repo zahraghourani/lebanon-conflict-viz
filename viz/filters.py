@@ -39,13 +39,21 @@ def render_filters(acled: pd.DataFrame, posts: pd.DataFrame):
     )
 
     # ── DATE RANGE ────────────────────────────────────────────
-    dmin   = acled['event_date'].min().date()
-    dmax   = acled['event_date'].max().date()
+    # Ensure we have valid dates from the dataset
+    if not acled.empty and 'event_date' in acled.columns:
+        dmin = acled['event_date'].min().date()
+        dmax = acled['event_date'].max().date()
+    else:
+        # Fallback if data is missing
+        dmin = date(2024, 1, 1)
+        dmax = date(2025, 4, 14)
+
     drange = st.sidebar.date_input(
         "Date range",
         value=(dmin, dmax),
         min_value=dmin,
-        max_value=dmax
+        max_value=dmax,
+        help="Select the start and end dates for the analysis."
     )
 
     st.sidebar.markdown("---")

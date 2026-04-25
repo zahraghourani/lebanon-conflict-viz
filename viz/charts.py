@@ -38,7 +38,7 @@ def make_map(filtered: pd.DataFrame) -> px.scatter_mapbox:
         color='event_type',
         color_discrete_map=EVENT_COLORS,
         size='fatalities_size',
-        size_max=25,
+        size_max=15,  # Further reduced for better clarity in dense areas
         hover_name='location',
         hover_data={
             'event_date':      True,
@@ -54,7 +54,7 @@ def make_map(filtered: pd.DataFrame) -> px.scatter_mapbox:
         center={"lat": 29.0, "lon": 40.0},   # centered on Middle East
         height=560,
         mapbox_style="carto-positron",
-        opacity=0.7,
+        opacity=0.5,  # Further reduced opacity to better visualize point density
     )
     fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),
