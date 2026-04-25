@@ -53,7 +53,7 @@ def make_map(filtered: pd.DataFrame) -> px.scatter_mapbox:
         zoom=4,
         center={"lat": 29.0, "lon": 40.0},   # centered on Middle East
         height=560,
-        mapbox_style="carto-positron",
+        mapbox_style="stamen-terrain",
         opacity=0.5,  # Further reduced opacity to better visualize point density
     )
     fig.update_layout(
