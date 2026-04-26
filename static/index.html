@@ -6,33 +6,31 @@
   <title>Middle East Conflict Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css" />
-  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <link rel="icon" type="image/png" href="/static/favicon.png">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
+
   <!-- SIDEBAR -->
   <div id="sidebar">
     <h2>🔎 Filters</h2>
-
     <label for="sel-countries">Country</label>
     <select id="sel-countries" multiple></select>
     <span class="select-hint">Hold Ctrl to select multiple</span>
-
     <label for="sel-types">Event Type</label>
     <select id="sel-types" multiple></select>
     <span class="select-hint">Hold Ctrl to select multiple</span>
-
     <label for="inp-date-from">Date From</label>
     <input id="inp-date-from" type="date" />
     <label for="inp-date-to">Date To</label>
     <input id="inp-date-to" type="date" />
-
     <div id="sidebar-footer">
       <button id="btn-apply">Apply Filters</button>
-      <button id="btn-clear">✕ Clear Filters</button>
+      <button id="btn-clear">X Clear Filters</button>
       <div class="sidebar-stats" id="sidebar-live-stats"></div>
     </div>
   </div>
@@ -40,11 +38,11 @@
   <!-- MAIN CONTENT -->
   <div id="main">
     <div id="header">
-      <h1>🌍 Middle East Conflict Dashboard</h1>
+      <h1>Middle East Conflict Dashboard</h1>
       <p>ACLED conflict events · Reddit sentiment · Jan 2024–Apr 2025</p>
     </div>
 
-    <!-- METRICS -->
+    <!-- 1. METRICS -->
     <div id="metrics">
       <div class="metric-card" id="m-events"></div>
       <div class="metric-card" id="m-fatalities"></div>
@@ -53,28 +51,26 @@
       <div class="metric-card" id="m-posts"></div>
     </div>
 
-    <!-- MAP SECTION -->
+    <!-- 2. WHERE — MAP -->
     <section id="sec-map">
-      <h2>📍 Where — Conflict Events Map</h2>
-
+      <h2>Where — Conflict Events Map</h2>
       <div id="map-controls">
-        <button id="btn-heatmap" class="active">🌍 Regional Overview</button>
-        <button id="btn-detail">🔍 Country Detail</button>
-        <button id="btn-back" style="display:none">← Back</button>
+        <button id="btn-heatmap" class="active">Regional Overview</button>
+        <button id="btn-detail">Country Detail</button>
+        <button id="btn-back" style="display:none">Back</button>
         <select id="country-drill" style="display:none">
-          <option value="">— select country —</option>
+          <option value="">select country</option>
         </select>
       </div>
-
       <div id="week-controls">
         <div id="period-toggle">
           <button class="period-btn active" data-period="day">Day</button>
           <button class="period-btn" data-period="week">Week</button>
           <button class="period-btn" data-period="month">Month</button>
         </div>
-        <button id="btn-play">▶ Play</button>
-        <button id="btn-pause" style="display:none">⏸ Pause</button>
-        <button id="btn-reset">⏮</button>
+        <button id="btn-play">Play</button>
+        <button id="btn-pause" style="display:none">Pause</button>
+        <button id="btn-reset">Reset</button>
         <input type="range" id="week-slider" min="0" value="0" style="display:none">
         <span id="week-label" style="display:none"></span>
         <span id="period-count"></span>
@@ -82,19 +78,18 @@
           <input type="checkbox" id="show-all" checked> Show all
         </label>
       </div>
-
       <div id="map-row">
         <div id="map-container"></div>
         <div id="map-stats">
-          <h3>📊 Stats</h3>
+          <h3>Stats</h3>
           <div id="stats-content"></div>
         </div>
       </div>
     </section>
 
-    <!-- TIMELINE -->
+    <!-- 3. WHEN — TIMELINE -->
     <section id="sec-timeline">
-      <h2>📅 When — Conflict Timeline</h2>
+      <h2>When — Conflict Timeline</h2>
       <div id="tab-timeline" class="tab-controls">
         <button class="tab active" data-tab="by-type">By event type</button>
         <button class="tab" data-tab="by-country">By country</button>
@@ -103,23 +98,106 @@
       <div id="chart-timeline-country" style="display:none"></div>
     </section>
 
-    <!-- HUMAN COST -->
+    <!-- 4. HOW BAD — HUMAN COST -->
     <section id="sec-fatalities">
-      <h2>💔 Human Cost</h2>
+      <h2>Human Cost</h2>
       <div id="fatalities-row">
         <div id="chart-fat-monthly"></div>
         <div id="chart-fat-country"></div>
       </div>
-      <h3 style="margin:20px 0 8px;font-size:15px;">Events vs Fatalities by Country</h3>
-      <p style="font-size:12px;color:#666;margin-bottom:12px;">
-        Blue = events (normalized) · Red = fatalities (normalized) · Gap shows lethality
+      <h3 style="margin:24px 0 6px;font-size:15px;">Events vs Fatalities by Country</h3>
+      <p style="font-size:12px;color:#888;margin-bottom:12px;">
+        Blue = events (normalized) · Red = fatalities (normalized) · Gap reveals lethality
       </p>
       <div id="chart-dotplot"></div>
+      <h3 style="margin:28px 0 6px;font-size:15px;">Monthly Fatalities by Event Type</h3>
+      <p style="font-size:12px;color:#888;margin-bottom:12px;">
+        Which conflict types drive the death toll month by month
+      </p>
+      <div id="chart-fatalities-by-type"></div>
     </section>
 
-    <!-- REDDIT SENTIMENT -->
+    <!-- 5. NIGHTINGALE POLAR AREA -->
+    <section id="sec-coxcomb" class="adv-section">
+      <h2>Polar Area Diagram — Fatalities by Type and Month</h2>
+      <div class="adv-description">
+        <p>
+          Inspired by Florence Nightingale's 1858 "Diagram of the Causes of Mortality
+          in the Army in the East" — the pioneering chart that drove British military
+          sanitation reform. Each wedge represents one month; radial area encodes
+          fatalities (square-root scaled so area is proportional to deaths, exactly
+          as Nightingale used). Overlapping colour layers show which event types
+          dominate each month's death toll. Hover any wedge for a full breakdown.
+        </p>
+        <span class="cite-badge"
+          title="Florence Nightingale (1858); Friendly (2008) A Brief History of Data Visualization">
+          Florence Nightingale 1858 · Friendly 2008
+        </span>
+      </div>
+      <div id="chart-coxcomb" class="adv-chart-container"></div>
+    </section>
+
+    <!-- 6. ESCALATION — DUMBBELL -->
+    <section id="sec-dumbbell">
+      <h2>Conflict Escalation by Country</h2>
+      <p style="font-size:12px;color:#888;margin-bottom:16px;">
+        Blue dot = first half of period · Red dot = second half ·
+        Red line = escalation · Green line = de-escalation
+      </p>
+      <div id="chart-dumbbell"></div>
+    </section>
+
+    <!-- 7. COUNTRY RANKINGS — BUMP CHART -->
+    <section id="sec-bump" class="adv-section">
+      <h2>Country Conflict Rankings Over Time</h2>
+      <div class="adv-description">
+        <p>
+          Tracks how each country's rank in monthly event count rises and falls across
+          the study period. Rank 1 = most events that month. Lines crossing signal a
+          shift in which countries are most affected — escalation or de-escalation
+          relative to neighbours. Smooth curves follow Wilke's (2019) recommendation
+          that bump charts are optimal for showing ordinal position changes over time.
+        </p>
+        <span class="cite-badge"
+          title="Wilke (2019) Fundamentals of Data Visualization ch.12">
+          Wilke 2019 · The Economist style
+        </span>
+      </div>
+      <div id="chart-bump" class="adv-chart-container"></div>
+    </section>
+
+    <!-- 8. CONFLICT STRUCTURE — CHORD -->
+    <section id="sec-chord" class="adv-section">
+      <h2>Conflict-Type Co-occurrence</h2>
+      <div class="adv-description">
+        <p>
+          Each arc represents a conflict event type. Ribbons between types are sized
+          by co-occurrence weight — how frequently two event types appear together in
+          the same country-month. Thick ribbons mean those conflict types habitually
+          cluster geographically and temporally. Hover an arc to highlight only its
+          ribbons and isolate which types it co-occurs with most strongly.
+        </p>
+        <span class="cite-badge"
+          title="CHORDination: Evaluating Visual Design Choices in Chord Diagrams (ACM CHI 2024, arXiv:2408.02268)">
+          CHORDination · ACM CHI 2024
+        </span>
+      </div>
+      <div id="chart-chord" class="adv-chart-container"></div>
+    </section>
+
+    <!-- 9. DAILY PATTERNS — CALENDAR HEATMAP -->
+    <section id="sec-calendar">
+      <h2>Daily Fatalities Calendar</h2>
+      <p style="font-size:12px;color:#888;margin-bottom:16px;">
+        Each cell = one day · Color intensity = total fatalities ·
+        Reveals weekly patterns and periods of acute escalation
+      </p>
+      <div id="chart-calendar"></div>
+    </section>
+
+    <!-- 10. PUBLIC VOICE — REDDIT -->
     <section id="sec-reddit">
-      <h2>💬 Public Voice — Reddit Sentiment</h2>
+      <h2>Public Voice — Reddit Sentiment</h2>
       <div id="reddit-row">
         <div id="chart-sentiment"></div>
         <div id="chart-volume"></div>
@@ -137,7 +215,7 @@
     </section>
 
     <footer>
-      <p>ACLED · Reddit via Pullpush.io · VADER NLP · Vega-Altair · Plotly · D3.js</p>
+      <p>ACLED · Reddit via Pullpush.io · VADER NLP · Vega-Lite · Plotly · D3.js</p>
     </footer>
   </div>
 
@@ -145,5 +223,6 @@
   <script src="/static/js/charts.js"></script>
   <script src="/static/js/map.js"></script>
   <script src="/static/js/app.js"></script>
+  <script src="/static/js/viz_advanced.js"></script>
 </body>
 </html>

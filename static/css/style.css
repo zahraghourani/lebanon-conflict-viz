@@ -4,6 +4,7 @@
     margin: 0;
     padding: 0;
     font-family: 'Poppins', -apple-system, sans-serif;
+    /* width: 100%; */
 }
 
 body {
@@ -579,7 +580,8 @@ section h3 {
 /* Chart containers */
 #chart-timeline-type, #chart-timeline-country,
 #chart-fat-monthly, #chart-fat-country,
-#chart-dotplot, #chart-sentiment, #chart-volume {
+#chart-dotplot, #chart-sentiment, #chart-volume,
+#chart-fatalities-by-type {
     min-height: 260px;
     width: 100%;
 }
@@ -636,4 +638,106 @@ footer {
     font-size: 12px;
     border-top: 1px solid #e8e8e8;
     margin-top: 8px;
+}
+#chart-calendar{
+      height: 100rem;
+      max-width: 90%;
+}
+#chart-connected-scatter,
+#chart-calendar,
+#chart-dumbbell {
+    width: 100%;
+    /* min-height: 300px; */
+    height: auto;
+}
+/* ── Advanced visualization sections ─────────────────────────────────────── */
+/* Matches the base light section style exactly. No dark backgrounds. */
+.adv-section {
+    background: #ffffff;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    position: relative;
+    overflow: visible;
+}
+.adv-section::before { display: none; }
+.adv-section h2 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.adv-description { margin-bottom: 16px; }
+.adv-description p {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.65;
+    margin: 0 0 6px;
+    max-width: 760px;
+}
+.cite-badge {
+    display: inline-block;
+    font-size: 10.5px;
+    color: #888;
+    background: #f4f5f7;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 3px 10px;
+    cursor: help;
+}
+.adv-chart-container {
+    position: relative;
+    width: 100%;
+    min-height: 60px;
+}
+.adv-chart-container svg {
+    display: block;
+    max-width: 100%;
+}
+.adv-loading {
+    padding: 40px 24px;
+    text-align: center;
+    color: #bbb;
+    font-size: 13px;
+    animation: adv-pulse 1.5s ease-in-out infinite;
+}
+@keyframes adv-pulse {
+    0%, 100% { opacity: 0.4; }
+    50%       { opacity: 1; }
+}
+.no-data {
+    padding: 32px 24px;
+    color: #bbb;
+    font-size: 13px;
+    text-align: center;
+}
+.adv-tooltip-el {
+    position: absolute;
+    background: rgba(25,25,35,0.93);
+    color: #e8e8f2;
+    padding: 9px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    line-height: 1.65;
+    pointer-events: none;
+    display: none;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+    max-width: 230px;
+    z-index: 9999;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    #fatalities-row, #reddit-row {
+        grid-template-columns: 1fr;
+    }
+    #map-row { flex-direction: column; }
+    #map-stats { max-height: none; }
+    #metrics { flex-wrap: wrap; }
+    .metric-card { min-width: calc(50% - 6px); }
 }

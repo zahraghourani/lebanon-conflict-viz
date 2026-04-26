@@ -1,4 +1,5 @@
 let mapInitialized = false;
+let currentMapMode = null;
 
 const EVENT_ORDER = [
   "Explosions/Remote violence",
@@ -49,6 +50,7 @@ async function renderHeatmap() {
     return;
   }
 
+  // Build traces...
   const byType = {};
   countries.forEach((c) => {
     const type = c.dominant_type || "Strategic developments";
@@ -130,29 +132,55 @@ async function renderHeatmap() {
     },
   };
 
-  if (!mapInitialized) {
+  // if (!mapInitialized) {
+  //   Plotly.newPlot("map-container", traces, layout, { responsive: true });
+  //   mapInitialized = true;
+  //   document.getElementById("map-container").on("plotly_click", function (eventData) {
+  //     if (eventData.points && eventData.points[0]) {
+  //       const country = eventData.points[0].customdata;
+  //       if (country) {
+  //         state.drillCountry = country;
+  //         state.mapMode = "detail";
+  //         mapInitialized = false;
+  //         document.getElementById("btn-heatmap").classList.remove("active");
+  //         document.getElementById("btn-detail").classList.add("active");
+  //         document.getElementById("btn-back").style.display = "inline-block";
+  //         document.getElementById("country-drill").style.display = "inline-block";
+  //         document.getElementById("country-drill").value = country;
+  //         renderDetailMap();
+  //       }
+  //     }
+  //   });
+  // } else {
+  //   Plotly.react("map-container", traces, layout);
+  // }
+  // KEY FIX: Always use newPlot when switching to heatmap mode
+  if (currentMapMode !== "heatmap") {
     Plotly.newPlot("map-container", traces, layout, { responsive: true });
+    currentMapMode = "heatmap";
     mapInitialized = true;
+    
+    // Re-attach click handler
     document.getElementById("map-container").on("plotly_click", function (eventData) {
-      if (eventData.points && eventData.points[0]) {
-        const country = eventData.points[0].customdata;
-        if (country) {
-          state.drillCountry = country;
-          state.mapMode = "detail";
-          mapInitialized = false;
-          document.getElementById("btn-heatmap").classList.remove("active");
-          document.getElementById("btn-detail").classList.add("active");
-          document.getElementById("btn-back").style.display = "inline-block";
-          document.getElementById("country-drill").style.display = "inline-block";
-          document.getElementById("country-drill").value = country;
-          renderDetailMap();
+        if (eventData.points && eventData.points[0]) {
+            const country = eventData.points[0].customdata;
+            if (country) {
+                state.drillCountry = country;
+                state.mapMode = "detail";
+                document.getElementById("btn-heatmap").classList.remove("active");
+                document.getElementById("btn-detail").classList.add("active");
+                document.getElementById("btn-back").style.display = "inline-block";
+                document.getElementById("country-drill").style.display = "inline-block";
+                document.getElementById("country-drill").value = country;
+                renderDetailMap();
+            }
         }
-      }
     });
   } else {
-    Plotly.react("map-container", traces, layout);
+      Plotly.react("map-container", traces, layout);
   }
 }
+
 
 // ── COUNTRY DETAIL MAP ────────────────────────────────────────────────────────
 async function renderDetailMap() {
@@ -251,10 +279,13 @@ async function renderDetailMap() {
     },
   };
 
-  if (!mapInitialized) {
-    Plotly.newPlot("map-container", traces, layout, { responsive: true });
-    mapInitialized = true;
-  } else {
-    Plotly.react("map-container", traces, layout);
-  }
+  // if (!mapInitialized) {
+  //   Plotly.newPlot("map-container", traces, layout, { responsive: true });
+  //   mapInitialized = true;
+  // } else {
+  //   Plotly.react("map-container", traces, layout);
+  // }
+  Plotly.newPlot("map-container", traces, layout, { responsive: true });
+  currentMapMode = "detail";
+  mapInitialized = true;
 }
