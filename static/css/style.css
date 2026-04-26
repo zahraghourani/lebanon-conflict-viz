@@ -741,3 +741,9 @@ footer {
     #metrics { flex-wrap: wrap; }
     .metric-card { min-width: calc(50% - 6px); }
 }
+
+#chart-small-multiples {
+  overflow-x: auto;
+  min-height: 260px;
+  width: 100%;
+}

@@ -398,7 +398,7 @@ async function refreshFatalities() {
     data: { values: byCountry.data },
     mark: { type: "bar", color: "#9467bd" },
     encoding: {
-      x: { field: "fatalities", type: "quantitative", title: "Total fatalities" },
+      x: { field: "fatalities", type: "quantitative" },
       y: { field: "country",    type: "nominal", sort: "-x", title: "Country" },
       tooltip: [{ field: "country" }, { field: "fatalities" }],
     },
@@ -1025,6 +1025,46 @@ async function refreshFatalitiesByType() {
   vegaEmbed("#chart-fatalities-by-type", spec, { actions: false });
 }
 
+async function refreshSmallMultiples() {
+  const data = await fetchJSON(`${API}/api/timeline/all-countries?${buildParams()}`);
+  const rows = data.data || [];
+  if (!rows.length) return;
+
+  const spec = {
+    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+    data: { values: rows },
+    width: "container",           // ← use full container width
+    facet: {
+      field: "country",
+      type: "nominal",
+      columns: 4,
+      title: null
+    },
+    spec: {
+      mark: { type: "area", opacity: 0.3, color: "#d62728" },
+      encoding: {
+        x: {
+          field: "year_month",
+          type: "ordinal",
+          axis: { labelAngle: -45, tickCount: 4, labelFontSize: 8 }
+        },
+        y: {
+          field: "count",
+          type: "quantitative",
+          axis: { title: null, labelFontSize: 8 }
+        }
+      },
+      height: 90, 
+    },
+    resolve: { scale: { y: "independent" } },
+    title: {
+      text: "Conflict Events Over Time — All Countries",
+      subtitle: "Small multiples · Each chart independently scaled"
+    }
+  };
+  vegaEmbed("#chart-small-multiples", spec, { actions: false });
+}
+
 async function refreshAll() {
     await Promise.all([
         refreshMetrics(),
@@ -1036,6 +1076,7 @@ async function refreshAll() {
         refreshSentiment(),
         refreshVolume(),
         refreshTopPosts(),
+        refreshSmallMultiples(),
         // Delay chart renders that need a computed container width
         new Promise(r => setTimeout(() => refreshFatalitiesByType().then(r),  50)),
         new Promise(r => setTimeout(() => refreshCalendarHeatmap().then(r),  150)),

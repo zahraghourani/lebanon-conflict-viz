@@ -1,13 +1,3 @@
-// ═══════════════════════════════════════════════════════════════════════════
-//  viz_advanced.js  —  Four advanced D3 v7 visualizations (light theme)
-//  SVGs are fully responsive using viewBox + width:100%.
-//  All text colours work on the white dashboard background.
-// ═══════════════════════════════════════════════════════════════════════════
-
-// ── COLOUR HELPERS ───────────────────────────────────────────────────────────
-// EVENT_COLORS is already declared in map.js (loaded first) — reuse it.
-// We only add a short-label map under a unique name.
-
 const ADV_EVENT_LABELS = {
     "Explosions/Remote violence": "Explosions",
     "Violence against civilians": "V. vs Civilians",

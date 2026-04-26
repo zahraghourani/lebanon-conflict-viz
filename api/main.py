@@ -274,6 +274,21 @@ def timeline_countries(
     monthly = acled.groupby(["year_month", "country"]).size().reset_index(name="count")
     return {"data": monthly.to_dict(orient="records")}
 
+@app.get("/api/timeline/all-countries")
+def timeline_all_countries(
+    countries:   str = Query(None),
+    event_types: str = Query(None),
+    date_from:   str = Query(None),
+    date_to:     str = Query(None), 
+    ):
+    acled = get_acled().copy()
+    cl = countries.split(",")   if countries   else None
+    el = event_types.split(",") if event_types else None
+    acled = apply_filters(acled, cl, el, date_from, date_to)
+    # top6 = acled.groupby("country").size().sort_values(ascending=False).head(6).index.tolist()
+    # acled = acled[acled["country"].isin(top6)]
+    monthly = acled.groupby(["year_month", "country"]).size().reset_index(name="count")
+    return {"data": monthly.to_dict(orient="records")}
 
 @app.get("/api/fatalities/monthly")
 def fatalities_monthly(
