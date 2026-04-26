@@ -1,5 +1,5 @@
 let sliderTimer = null;
-let mapInitialized = false;
+// let mapInitialized = false;
 const API = "";
 
 const state = {
@@ -40,6 +40,7 @@ async function fetchJSON(url) {
 async function init() {
   const opts = await fetchJSON(`${API}/api/filters/options`);
 
+  // Populate country select
   const countrySel = document.getElementById("sel-countries");
   opts.countries.forEach((c) => {
     const o = document.createElement("option");
@@ -47,6 +48,7 @@ async function init() {
     countrySel.appendChild(o);
   });
 
+  // Populate event type select
   const typeSel = document.getElementById("sel-types");
   opts.event_types.forEach((t) => {
     const o = document.createElement("option");
@@ -54,11 +56,13 @@ async function init() {
     typeSel.appendChild(o);
   });
 
+  // Date defaults
   document.getElementById("inp-date-from").value = opts.date_min;
   document.getElementById("inp-date-to").value = opts.date_max;
   state.dateFrom = opts.date_min;
   state.dateTo = opts.date_max;
 
+  // Country drill-down select
   const drillSel = document.getElementById("country-drill");
   opts.countries.forEach((c) => {
     const o = document.createElement("option");
@@ -66,38 +70,42 @@ async function init() {
     drillSel.appendChild(o);
   });
 
-  await loadWeeks();
-
+  // Load periods and hide slider by default
+  await loadPeriods();
   document.getElementById("btn-back").style.display = "none";
   document.getElementById("country-drill").style.display = "none";
-  const slider = document.getElementById("week-slider");
-  const weekLabel = document.getElementById("week-label");
-  slider.style.display = "none";
-  weekLabel.style.display = "none";
+  document.getElementById("week-slider").style.display = "none";
+  document.getElementById("week-label").style.display = "none";
   state.showAll = true;
   document.getElementById("show-all").checked = true;
 
   await refreshAll();
   await renderHeatmap();
 
+  // ── EVENT LISTENERS ────────────────────────────────────────────
+
+  // Filter buttons
   document.getElementById("btn-apply").addEventListener("click", applyFilters);
   document.getElementById("btn-clear").addEventListener("click", clearFilters);
+
+  // Map mode buttons
   document.getElementById("btn-heatmap").addEventListener("click", () => setMapMode("heatmap"));
   document.getElementById("btn-detail").addEventListener("click", () => setMapMode("detail"));
   document.getElementById("btn-back").addEventListener("click", () => setMapMode("heatmap"));
+
+  // Show all checkbox
   document.getElementById("show-all").addEventListener("change", async function () {
     state.showAll = this.checked;
     const sliderEl = document.getElementById("week-slider");
     const weekLabelEl = document.getElementById("week-label");
     sliderEl.style.display = state.showAll ? "none" : "inline-block";
     weekLabelEl.style.display = state.showAll ? "none" : "inline";
-    if (state.mapMode === "heatmap") {
-      await renderHeatmap();
-    } else {
-      await renderDetailMap();
-    }
+    if (state.mapMode === "heatmap") await renderHeatmap();
+    else await renderDetailMap();
   });
-  document.getElementById("week-slider").addEventListener("input", function() {
+
+  // Week slider with debounce — label updates instantly, map waits 150ms
+  document.getElementById("week-slider").addEventListener("input", function () {
     state.weekIdx = +this.value;
     document.getElementById("week-label").textContent = state.weeks[state.weekIdx] || "";
     clearTimeout(sliderTimer);
@@ -106,11 +114,33 @@ async function init() {
       else await renderDetailMap();
     }, 150);
   });
+
+  // Play / Pause / Reset
+  document.getElementById("btn-play").addEventListener("click", startPlay);
+  document.getElementById("btn-pause").addEventListener("click", stopPlay);
+  document.getElementById("btn-reset").addEventListener("click", () => {
+    stopPlay();
+    state.weekIdx = 0;
+    document.getElementById("week-slider").value = 0;
+    document.getElementById("week-label").textContent = state.weeks[0] || "";
+    if (state.mapMode === "heatmap") renderHeatmap();
+    else renderDetailMap();
+  });
+
+  // Country drill-down
+  document.getElementById("country-drill").addEventListener("change", async function () {
+    const val = this.value;
+    if (val) {
+      state.drillCountry = val;
+      mapInitialized = false;
+      await renderDetailMap();
+    }
+  });
+
   // Period toggle buttons
   document.querySelectorAll(".period-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      document.querySelectorAll(".period-btn")
-        .forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".period-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       state.period = btn.dataset.period;
       state.weekIdx = 0;
@@ -125,23 +155,7 @@ async function init() {
     });
   });
 
-  document.getElementById("btn-play").addEventListener("click", startPlay);
-  document.getElementById("btn-pause").addEventListener("click", stopPlay);
-  document.getElementById("btn-reset").addEventListener("click", () => {
-    stopPlay();
-    state.weekIdx = 0;
-    document.getElementById("week-slider").value = 0;
-    document.getElementById("week-label").textContent = state.weeks[0] || "";
-    refreshMap();
-  });
-  document.getElementById("country-drill").addEventListener("change", async function () {
-    const val = this.value;
-    if (val) {
-      state.drillCountry = val;
-      await renderDetailMap();
-    }
-  });
-
+  // Timeline tabs
   document.querySelectorAll("#tab-timeline .tab").forEach((btn) => {
     btn.addEventListener("click", () => {
       const tab = btn.dataset.tab;
@@ -161,6 +175,8 @@ async function init() {
   });
 }
 
+// ── DATA LOADING ──────────────────────────────────────────────────────────────
+
 async function loadWeeks() {
   const data = await fetchJSON(`${API}/api/weeks?${buildParams()}`);
   state.weeks = data.weeks || [];
@@ -169,6 +185,7 @@ async function loadWeeks() {
   slider.value = state.weekIdx;
   document.getElementById("week-label").textContent = state.weeks[state.weekIdx] || "";
 }
+
 async function loadPeriods() {
   const data = await fetchJSON(
     `${API}/api/periods?${buildParams()}&period=${state.period}`
@@ -183,44 +200,39 @@ async function loadPeriods() {
   const countEl = document.getElementById("period-count");
   if (countEl) countEl.textContent = `${state.weeks.length} ${periodName}`;
 }
+
+// ── FILTERS ───────────────────────────────────────────────────────────────────
+
 async function applyFilters() {
   mapInitialized = false;
   const countrySel = document.getElementById("sel-countries");
-  const typeSel = document.getElementById("sel-types");
-  state.countries = Array.from(countrySel.selectedOptions).map((o) => o.value);
+  const typeSel    = document.getElementById("sel-types");
+  state.countries  = Array.from(countrySel.selectedOptions).map((o) => o.value);
   state.eventTypes = Array.from(typeSel.selectedOptions).map((o) => o.value);
-  state.dateFrom = document.getElementById("inp-date-from").value;
-  state.dateTo = document.getElementById("inp-date-to").value;
-  state.weekIdx = 0;
-  await loadWeeks();
+  state.dateFrom   = document.getElementById("inp-date-from").value;
+  state.dateTo     = document.getElementById("inp-date-to").value;
+  state.weekIdx    = 0;
+  await loadPeriods();
   await refreshAll();
 }
 
 async function clearFilters() {
   mapInitialized = false;
   const countrySel = document.getElementById("sel-countries");
-  const typeSel = document.getElementById("sel-types");
-  Array.from(countrySel.options).forEach((o) => {
-    o.selected = false;
-  });
-  Array.from(typeSel.options).forEach((o) => {
-    o.selected = false;
-  });
-
+  const typeSel    = document.getElementById("sel-types");
+  Array.from(countrySel.options).forEach((o) => (o.selected = false));
+  Array.from(typeSel.options).forEach((o) => (o.selected = false));
   const opts = await fetchJSON("/api/filters/options");
   document.getElementById("inp-date-from").value = opts.date_min;
-  document.getElementById("inp-date-to").value = opts.date_max;
-
-  state.countries = [];
+  document.getElementById("inp-date-to").value   = opts.date_max;
+  state.countries  = [];
   state.eventTypes = [];
-  state.dateFrom = opts.date_min;
-  state.dateTo = opts.date_max;
-  state.weekIdx = 0;
-
+  state.dateFrom   = opts.date_min;
+  state.dateTo     = opts.date_max;
+  state.weekIdx    = 0;
   document.getElementById("week-slider").value = 0;
   document.getElementById("week-label").textContent = state.weeks[0] || "";
-
-  await loadWeeks();
+  await loadPeriods();
   await refreshAll();
 }
 
@@ -238,6 +250,8 @@ async function refreshAll() {
   ]);
 }
 
+// ── MAP MODE ──────────────────────────────────────────────────────────────────
+
 function setMapMode(mode) {
   mapInitialized = false;
   state.mapMode = mode;
@@ -252,6 +266,8 @@ function setMapMode(mode) {
   }
 }
 
+// ── PLAY / PAUSE ──────────────────────────────────────────────────────────────
+
 function startPlay() {
   if (state.playing) return;
   state.playing = true;
@@ -261,20 +277,20 @@ function startPlay() {
   document.getElementById("week-label").style.display = "inline";
   document.getElementById("btn-play").style.display = "none";
   document.getElementById("btn-pause").style.display = "inline";
+
+  const speed = state.period === "day" ? 400 : state.period === "week" ? 900 : 1200;
+
   state.playInterval = setInterval(async () => {
     if (state.weekIdx < state.weeks.length - 1) {
       state.weekIdx++;
       document.getElementById("week-slider").value = state.weekIdx;
       document.getElementById("week-label").textContent = state.weeks[state.weekIdx];
-      if (state.mapMode === "heatmap") {
-        await renderHeatmap();
-      } else {
-        await renderDetailMap();
-      }
+      if (state.mapMode === "heatmap") await renderHeatmap();
+      else await renderDetailMap();
     } else {
       stopPlay();
     }
-  }, 900);
+  }, speed);
 }
 
 function stopPlay() {
@@ -283,6 +299,8 @@ function stopPlay() {
   document.getElementById("btn-play").style.display = "inline";
   document.getElementById("btn-pause").style.display = "none";
 }
+
+// ── METRICS ───────────────────────────────────────────────────────────────────
 
 async function refreshMetrics() {
   const data = await fetchJSON(`${API}/api/metrics?${buildParams()}`);
@@ -296,7 +314,10 @@ async function refreshMetrics() {
     <div><strong>Fatalities:</strong> ${data.total_fatalities?.toLocaleString() ?? 0}</div>
   `;
 
-  const activeFilters = (state.countries.length > 0 ? 1 : 0) + (state.eventTypes.length > 0 ? 1 : 0);
+  // Update clear button
+  const activeFilters =
+    (state.countries.length  > 0 ? 1 : 0) +
+    (state.eventTypes.length > 0 ? 1 : 0);
   const clearBtn = document.getElementById("btn-clear");
   if (activeFilters > 0) {
     clearBtn.textContent = `✕ Clear Filters (${activeFilters} active)`;
@@ -310,8 +331,16 @@ async function refreshMetrics() {
 }
 
 function setMetric(id, label, value) {
-  document.getElementById(id).innerHTML = `<div class="metric-label">${label}</div>
-     <div class="metric-value">${value ?? "—"}</div>`;
+  document.getElementById(id).innerHTML = `
+    <div class="metric-label">${label}</div>
+    <div class="metric-value">${value ?? "—"}</div>`;
+}
+
+// ── MAP + STATS ───────────────────────────────────────────────────────────────
+
+async function refreshMap() {
+  if (state.mapMode === "heatmap") await renderHeatmap();
+  else await renderDetailMap();
 }
 
 async function refreshStats() {
@@ -321,21 +350,16 @@ async function refreshStats() {
     "<strong>Top locations by fatalities:</strong><br><br>" +
     (data.data || [])
       .map(
-        (d) => `<div style="margin-bottom:8px">
-        <strong>${d.location}</strong><br>
-        <small style="color:#666">${d.events} events · ${d.fatalities} fatalities</small>
-       </div>`
+        (d) =>
+          `<div style="margin-bottom:8px">
+            <strong>${d.location}</strong><br>
+            <small style="color:#666">${d.events} events · ${d.fatalities} fatalities</small>
+          </div>`
       )
       .join("");
 }
 
-async function refreshMap() {
-  if (state.mapMode === "heatmap") {
-    await renderHeatmap();
-  } else {
-    await renderDetailMap();
-  }
-}
+// ── CHARTS ────────────────────────────────────────────────────────────────────
 
 async function refreshTimeline() {
   const [typeData, countryData] = await Promise.all([
@@ -444,20 +468,8 @@ async function refreshDotPlot() {
   const rows = data.data || [];
   const melted = [];
   rows.forEach((r) => {
-    melted.push({
-      country: r.country,
-      metric: "Events (normalized)",
-      value: r.events_norm,
-      events: r.events,
-      fatalities: r.fatalities,
-    });
-    melted.push({
-      country: r.country,
-      metric: "Fatalities (normalized)",
-      value: r.fatalities_norm,
-      events: r.events,
-      fatalities: r.fatalities,
-    });
+    melted.push({ country: r.country, metric: "Events (normalized)", value: r.events_norm, events: r.events, fatalities: r.fatalities });
+    melted.push({ country: r.country, metric: "Fatalities (normalized)", value: r.fatalities_norm, events: r.events, fatalities: r.fatalities });
   });
   const countryOrder = rows.map((r) => r.country);
   const lines = {
@@ -505,7 +517,10 @@ async function refreshSentiment() {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     data: { values: data.data },
     layer: [
-      { mark: { type: "rule", color: "gray", strokeDash: [4, 4], opacity: 0.4 }, encoding: { y: { datum: 0 } } },
+      {
+        mark: { type: "rule", color: "gray", strokeDash: [4, 4], opacity: 0.4 },
+        encoding: { y: { datum: 0 } },
+      },
       {
         mark: { type: "area", color: "#d62728", opacity: 0.1, interpolate: "monotone" },
         encoding: {
@@ -580,10 +595,36 @@ async function refreshTopPosts() {
         ${Number(d.sentiment || 0).toFixed(3)}
       </td>
       <td><a href="${d.permalink || "#"}" target="_blank">View →</a></td>
-    </tr>
-  `
+    </tr>`
     )
     .join("");
 }
+
+function formatPeriodLabel(periodStr, periodType) {
+    if (!periodStr) return "";
+    
+    if (periodType === "day") {
+        return new Date(periodStr).toLocaleDateString("en-US", {
+            month: "short", day: "numeric", year: "numeric"
+        });  // "Jan 9, 2024"
+    } else if (periodType === "week") {
+        // Parse ISO week "2024-W02"
+        const [y, w] = periodStr.split("-W");
+        const monday = new Date(y, 0, 1 + (w - 1) * 7 - new Date(y, 0, 1).getDay() + 1);
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+        return `${monday.toLocaleDateString("en-US", {month:"short", day:"numeric"})} – ${sunday.toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"})}`;
+    } else if (periodType === "month") {
+        return new Date(periodStr + "-01").toLocaleDateString("en-US", {
+            month: "long", year: "numeric"
+        });  // "January 2024"
+    }
+    return periodStr;
+}
+
+// Update in slider input handler:
+document.getElementById("week-label").textContent = formatPeriodLabel(
+    state.weeks[state.weekIdx], state.period
+);
 
 document.addEventListener("DOMContentLoaded", init);

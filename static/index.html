@@ -6,38 +6,45 @@
   <title>Middle East Conflict Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css" />
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
+  <!-- SIDEBAR -->
   <div id="sidebar">
     <h2>🔎 Filters</h2>
+
     <label for="sel-countries">Country</label>
     <select id="sel-countries" multiple></select>
+    <span class="select-hint">Hold Ctrl to select multiple</span>
 
     <label for="sel-types">Event Type</label>
     <select id="sel-types" multiple></select>
+    <span class="select-hint">Hold Ctrl to select multiple</span>
 
     <label for="inp-date-from">Date From</label>
     <input id="inp-date-from" type="date" />
     <label for="inp-date-to">Date To</label>
     <input id="inp-date-to" type="date" />
 
-    <button id="btn-apply">Apply Filters</button>
-    <button id="btn-clear">✕ Clear Filters</button>
-
-    <div class="sidebar-stats" id="sidebar-live-stats"></div>
+    <div id="sidebar-footer">
+      <button id="btn-apply">Apply Filters</button>
+      <button id="btn-clear">✕ Clear Filters</button>
+      <div class="sidebar-stats" id="sidebar-live-stats"></div>
+    </div>
   </div>
 
+  <!-- MAIN CONTENT -->
   <div id="main">
     <div id="header">
       <h1>🌍 Middle East Conflict Dashboard</h1>
       <p>ACLED conflict events · Reddit sentiment · Jan 2024–Apr 2025</p>
     </div>
 
+    <!-- METRICS -->
     <div id="metrics">
       <div class="metric-card" id="m-events"></div>
       <div class="metric-card" id="m-fatalities"></div>
@@ -46,26 +53,36 @@
       <div class="metric-card" id="m-posts"></div>
     </div>
 
+    <!-- MAP SECTION -->
     <section id="sec-map">
       <h2>📍 Where — Conflict Events Map</h2>
+
       <div id="map-controls">
-        <button id="btn-heatmap" class="active">🌡️ Heatmap</button>
+        <button id="btn-heatmap" class="active">🌍 Regional Overview</button>
         <button id="btn-detail">🔍 Country Detail</button>
         <button id="btn-back" style="display:none">← Back</button>
         <select id="country-drill" style="display:none">
           <option value="">— select country —</option>
         </select>
       </div>
+
       <div id="week-controls">
+        <div id="period-toggle">
+          <button class="period-btn active" data-period="day">Day</button>
+          <button class="period-btn" data-period="week">Week</button>
+          <button class="period-btn" data-period="month">Month</button>
+        </div>
         <button id="btn-play">▶ Play</button>
         <button id="btn-pause" style="display:none">⏸ Pause</button>
         <button id="btn-reset">⏮</button>
-        <input type="range" id="week-slider" min="0" value="0">
-        <span id="week-label"></span>
-        <label>
-          <input type="checkbox" id="show-all" checked> Show all weeks
+        <input type="range" id="week-slider" min="0" value="0" style="display:none">
+        <span id="week-label" style="display:none"></span>
+        <span id="period-count"></span>
+        <label style="margin-left:8px">
+          <input type="checkbox" id="show-all" checked> Show all
         </label>
       </div>
+
       <div id="map-row">
         <div id="map-container"></div>
         <div id="map-stats">
@@ -75,6 +92,7 @@
       </div>
     </section>
 
+    <!-- TIMELINE -->
     <section id="sec-timeline">
       <h2>📅 When — Conflict Timeline</h2>
       <div id="tab-timeline" class="tab-controls">
@@ -85,29 +103,28 @@
       <div id="chart-timeline-country" style="display:none"></div>
     </section>
 
+    <!-- HUMAN COST -->
     <section id="sec-fatalities">
       <h2>💔 Human Cost</h2>
       <div id="fatalities-row">
         <div id="chart-fat-monthly"></div>
         <div id="chart-fat-country"></div>
       </div>
-      <h3 style="margin: 20px 0 8px; font-size:15px;">
-        Events vs Fatalities by Country
-      </h3>
-      <p style="font-size:12px; color:#666; margin-bottom:12px;">
-        Blue = events (normalized) · Red = fatalities (normalized) ·
-        Gap shows lethality relative to activity
+      <h3 style="margin:20px 0 8px;font-size:15px;">Events vs Fatalities by Country</h3>
+      <p style="font-size:12px;color:#666;margin-bottom:12px;">
+        Blue = events (normalized) · Red = fatalities (normalized) · Gap shows lethality
       </p>
       <div id="chart-dotplot"></div>
     </section>
 
+    <!-- REDDIT SENTIMENT -->
     <section id="sec-reddit">
       <h2>💬 Public Voice — Reddit Sentiment</h2>
       <div id="reddit-row">
         <div id="chart-sentiment"></div>
         <div id="chart-volume"></div>
       </div>
-      <h3>Most Upvoted Posts</h3>
+      <h3 style="margin:20px 0 12px;">Most Upvoted Posts</h3>
       <table id="posts-table">
         <thead>
           <tr>
