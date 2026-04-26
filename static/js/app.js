@@ -1090,6 +1090,67 @@ async function refreshSmallMultiples() {
   vegaEmbed("#chart-small-multiples", spec, { actions: false });
 }
 
+async function refreshSubredditSentiment() {
+  const container = document.getElementById("chart-subreddit");
+  if (!container) {
+    console.error("chart-subreddit div not found in HTML");
+    return;
+  }
+  try {
+    const data = await fetchJSON(`${API}/api/subreddit-sentiment`);
+    console.log("Subreddit data:", data);
+    if (!data?.data?.length) {
+      container.innerHTML = '<p style="color:#888;padding:12px">No subreddit data.</p>';
+      return;
+    }
+
+    const w = container.offsetWidth || container.clientWidth || 700;
+
+    const spec = {
+      $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+      data: { values: data.data },
+      mark: { type: "bar", cornerRadiusEnd: 4 },
+      encoding: {
+        y: {
+          field: "subreddit",
+          type: "nominal",
+          sort: { field: "avg_sentiment", order: "ascending" },
+          title: "Subreddit",
+          axis: { labelFontSize: 12 },
+        },
+        x: {
+          field: "avg_sentiment",
+          type: "quantitative",
+          title: "Avg VADER sentiment",
+          scale: { domain: [-1, 1] },
+          axis: { gridDash: [3, 3] },
+        },
+        color: {
+          condition: { test: "datum.avg_sentiment < 0", value: "#d62728" },
+          value: "#2ca02c",
+        },
+        tooltip: [
+          { field: "subreddit",     title: "Subreddit" },
+          { field: "avg_sentiment", title: "Avg sentiment", format: ".3f" },
+          { field: "post_count",    title: "Posts" },
+        ],
+      },
+      title: {
+        text: "Average VADER Sentiment by Subreddit",
+        subtitle: "Red = net negative · Green = net positive",
+      },
+      height: 280,
+      width: w - 40,
+    };
+
+    await vegaEmbed("#chart-subreddit", spec, { actions: false });
+    console.log("Subreddit chart rendered successfully");
+  } catch (e) {
+    console.error("Subreddit sentiment error:", e);
+    container.innerHTML = `<p style="color:#d62728;padding:12px">Error: ${e.message}</p>`;
+  }
+}
+
 async function refreshAll() {
     await Promise.all([
         refreshMetrics(),
@@ -1106,7 +1167,12 @@ async function refreshAll() {
         new Promise(r => setTimeout(() => refreshFatalitiesByType().then(r),  50)),
         new Promise(r => setTimeout(() => refreshCalendarHeatmap().then(r),  150)),
         new Promise(r => setTimeout(() => refreshDumbbell().then(r),          250)),
+        new Promise(r => setTimeout(() => refreshSentiment().then(r),        150)),
+        new Promise(r => setTimeout(() => refreshVolume().then(r),           150)),
+        // new Promise(r => setTimeout(() => refreshSubredditSentiment().then(r), 200)),
         new Promise(r => setTimeout(() => refreshAdvancedCharts().then(r),   350)),
+        new Promise(r => setTimeout(() => refreshSubredditSentiment().then(r), 400)),
     ]);
 }
+
 document.addEventListener("DOMContentLoaded", init);

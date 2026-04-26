@@ -404,12 +404,14 @@ function drawCoxcomb(rows, container) {
             })
             .on("mouseout",function(){ tip.hide(); });
         // Month label
+        // WITH this:
         var mid=(startAngle+endAngle)/2, lr=outerR+18;
         g.append("text")
-            .attr("x",Math.cos(mid)*lr).attr("y",Math.sin(mid)*lr)
+            .attr("x", lr * Math.sin(mid))      // ← correct D3-to-SVG conversion
+            .attr("y", -lr * Math.cos(mid))     // ← correct D3-to-SVG conversion
             .attr("text-anchor","middle").attr("dy","0.35em")
             .style("font-size","9px").style("fill","#888").text(md.label);
-    });
+            });
 
     // Centre
     var grand=monthData.reduce(function(s,d){return s+d.total;},0);

@@ -382,6 +382,18 @@ def volume():
     monthly = monthly.sort_values("year_month")
     return {"data": monthly.to_dict(orient="records")}
 
+@app.get("/api/keyword-sentiment")
+def keyword_sentiment():
+    posts = get_posts()
+    if "keywords" not in posts.columns:
+        return {"data": []}
+    df = posts.groupby("keywords").agg(
+        avg_sentiment=("sentiment", "mean"),
+        post_count=("sentiment", "count")
+    ).reset_index()
+    df = df[df["post_count"] >= 3].sort_values("avg_sentiment")
+    df["avg_sentiment"] = df["avg_sentiment"].round(3)
+    return {"data": df.to_dict(orient="records")}
 
 @app.get("/api/top-posts")
 def top_posts(
@@ -751,5 +763,18 @@ def bump_api(
             })
  
     return {"data": sorted(records, key=lambda x: (x["year_month"], x["rank"]))}
- 
+
+@app.get("/api/subreddit-sentiment")
+def subreddit_sentiment():
+    posts = get_posts()
+    if "subreddit" not in posts.columns:
+        return {"data": []}
+    df = posts.groupby("subreddit").agg(
+        avg_sentiment=("sentiment", "mean"),
+        post_count=("sentiment", "count")
+    ).reset_index()
+    df = df[df["post_count"] >= 1].sort_values("avg_sentiment")
+    df["avg_sentiment"] = df["avg_sentiment"].round(3)
+    return {"data": df.to_dict(orient="records")}
+
 app.mount("/static", StaticFiles(directory="static"), name="static")

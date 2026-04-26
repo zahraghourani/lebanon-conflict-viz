@@ -100,7 +100,7 @@
 
     <!-- 4. HOW BAD — HUMAN COST -->
     <section id="sec-fatalities">
-      <h2>Human Cost</h2>
+      <!-- <h2>Human Cost</h2>
       <div id="fatalities-row">
         <div id="chart-fat-monthly"></div>
         <div id="chart-fat-country"></div>
@@ -108,7 +108,7 @@
       <h3 style="margin:24px 0 6px;font-size:15px;">Events vs Fatalities by Country</h3>
       <p style="font-size:12px;color:#888;margin-bottom:12px;">
         Blue = events (normalized) · Red = fatalities (normalized) · Gap reveals lethality
-      </p>
+      </p> -->
       <div id="chart-dotplot"></div>
       <h3 style="margin:28px 0 6px;font-size:15px;">Monthly Fatalities by Event Type</h3>
       <p style="font-size:12px;color:#888;margin-bottom:12px;">
@@ -116,10 +116,10 @@
       </p>
       <div id="chart-fatalities-by-type"></div>
     </section>
-    <section id="sec-small-multiples">
+    <!-- <section id="sec-small-multiples">
       <h2>🌐 Country‑by‑Country Trajectories</h2>
       <div id="chart-small-multiples"></div>
-    </section>
+    </section> -->
 
     <!-- 5. NIGHTINGALE POLAR AREA -->
     <section id="sec-coxcomb" class="adv-section">
@@ -202,10 +202,23 @@
     <!-- 10. PUBLIC VOICE — REDDIT -->
     <section id="sec-reddit">
       <h2>Public Voice — Reddit Sentiment</h2>
+      <p style="font-size:12px;color:#888;margin-bottom:16px;">
+        23,708 posts and comments across 11 subreddits · VADER sentiment analysis
+      </p>
+
       <div id="reddit-row">
         <div id="chart-sentiment"></div>
         <div id="chart-volume"></div>
       </div>
+
+      <!-- ADD THIS BLOCK -->
+      <h3 style="margin:24px 0 8px;font-size:15px;">Sentiment by Subreddit</h3>
+      <p style="font-size:12px;color:#888;margin-bottom:12px;">
+        Conflict-specific communities express stronger negativity than general news subreddits
+      </p>
+      <div id="chart-subreddit" style="min-height:300px"></div>
+      <!-- END ADD -->
+
       <h3 style="margin:20px 0 12px;">Most Upvoted Posts</h3>
       <table id="posts-table">
         <thead>

@@ -691,12 +691,14 @@ footer {
 }
 .adv-chart-container {
     position: relative;
-    width: 100%;
+    width: 80%;
     min-height: 60px;
+    margin: 0 auto;
 }
 .adv-chart-container svg {
     display: block;
-    max-width: 100%;
+    max-width: 80%;
+    margin: 0 auto;
 }
 .adv-loading {
     padding: 40px 24px;
@@ -746,4 +748,9 @@ footer {
   overflow-x: auto;
   min-height: 260px;
   width: 100%;
+}
+
+#chart-subreddit{
+      /* height: 100rem; */
+      max-width: 90%;
 }
