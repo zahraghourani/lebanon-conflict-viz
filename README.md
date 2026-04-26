@@ -2,7 +2,7 @@
 
 **Bridging Physical & Digital Worlds: Visualizing the Middle East Conflict Through Spatial and Sentiment Data**
 
-A full-stack interactive dashboard combining **ACLED** conflict event data, **GDELT** real-time media sentiment, and **Reddit** public opinion into a single spatially-navigable and temporally-linked visual narrative — powered by FastAPI, D3.js, Vega-Lite, and Plotly.
+A full-stack interactive dashboard combining **ACLED** conflict event data and **Reddit** public opinion into a single spatially-navigable and temporally-linked visual narrative — powered by FastAPI, D3.js, Vega-Lite, and Plotly.
 
 > **Course:** DSC 614 — Data Visualization · Spring 2026 · Lebanese American University  
 > **Author:** Zahra Ghourani
@@ -26,7 +26,6 @@ A full-stack interactive dashboard combining **ACLED** conflict event data, **GD
 | 📆 **Calendar Heatmap** | Vega-Lite + D3 | Day × week grid, color = daily fatalities |
 | 📈 **Dumbbell Plot** | D3.js | First-half vs second-half event counts per country |
 | 🔗 **Connected Scatter** | Vega-Lite | Weekly events vs Reddit sentiment — temporal trajectory |
-| 💬 **Sentiment Line** | Vega-Lite | Daily GDELT media tone |
 | 📰 **Volume Area Chart** | Vega-Lite | Daily global media coverage volume |
 
 ### 🔬 Advanced Visualizations *(new)*
@@ -70,14 +69,11 @@ middle-east-conflict-viz/
 │   └── processed/                   # Cleaned, dashboard-ready data
 │       ├── acled_clean.csv          # Merged + cleaned ACLED
 │       ├── reddit_posts_clean.csv   # Sentiment-annotated posts
-│       ├── reddit_comments_clean.csv
-│       ├── gdelt_tone.csv           # Daily GDELT sentiment score
-│       └── gdelt_volume.csv         # Daily GDELT article volume
+│       └── reddit_comments_clean.csv
 │
 ├── notebooks/
 │   ├── fetch_acled_middle_east.py   # Step 1 — pull ACLED data
-│   ├── fetch_gdelt_middle_east.py   # Step 2 — pull GDELT data
-│   ├── fetch_reddit_middle_east.py  # Step 3 — pull Reddit data
+│   ├── fetch_reddit_middle_east.py  # Step 2 — pull Reddit data
 │   └── explore_acled.py             # Optional EDA
 │
 ├── static/
@@ -109,7 +105,7 @@ middle-east-conflict-viz/
 | **Frontend** | Vanilla JS (ES2022) · D3.js v7 · Vega-Lite v5 · Plotly.js |
 | **Maps** | Plotly `scattergeo` |
 | **NLP** | VADER SentimentIntensityAnalyzer |
-| **Data** | ACLED, GDELT, Reddit (via Pullpush.io) |
+| **Data** | ACLED, Reddit (via Pullpush.io) |
 
 ---
 
@@ -186,28 +182,7 @@ COMBINED DATASET — BROADER MIDDLE EAST
 
 ---
 
-### Step 2 — GDELT Media Sentiment
-
-**Script:** `notebooks/fetch_gdelt_middle_east.py`
-
-Pulls global media sentiment (tone) and coverage volume for Middle East conflict keywords from GDELT. Covers Jan 2024 → Apr 2025 in 5 quarterly chunks.
-
-```bash
-python notebooks/fetch_gdelt_middle_east.py
-```
-
-Expected output:
-
-```
-✓ gdelt_tone.csv   : ~400 data points
-✓ gdelt_volume.csv : ~400 data points
-```
-
-> No API key required. GDELT is free and open.
-
----
-
-### Step 3 — Reddit Public Opinion
+### Step 2 — Reddit Public Opinion
 
 **Script:** `notebooks/fetch_reddit_middle_east.py`
 
@@ -284,7 +259,6 @@ Commit `data/processed/` so the dashboard has data on first boot (ACLED CSVs are
 | Source | Data | Update Frequency | Cost |
 |---|---|---|---|
 | [ACLED](https://acleddata.com) | Conflict events, GPS, fatalities | Weekly | Free (registration required) |
-| [GDELT](https://gdeltproject.org) | Media sentiment & volume | Every 15 minutes | Free, no key |
 | [Pullpush.io](https://pullpush.io) | Reddit posts & comments | Archived | Free, no key |
 
 ---
@@ -300,7 +274,6 @@ Commit `data/processed/` so the dashboard has data on first boot (ACLED CSVs are
 | Wilke, C. O. (2019). *Fundamentals of Data Visualization*. O'Reilly. | Bump chart rationale (ch. 12), general principles |
 | Raleigh, C. et al. (2010). Introducing ACLED: An Armed Conflict Location and Event Dataset. *Journal of Peace Research*, 47(5). | Primary data source methodology |
 | Boschee, E. et al. (2015). ICEWS Coded Event Data. *Harvard Dataverse*. | Context for event-data approaches |
-| Maier, M. (2010). GDELT: Global Data on Events, Location, and Tone. | Media sentiment methodology |
 
 ---
 
