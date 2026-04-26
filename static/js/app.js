@@ -157,7 +157,7 @@ async function init() {
       btn.classList.add("active");
       document.getElementById("chart-timeline-type").style.display    = tab === "by-type"    ? "block" : "none";
       document.getElementById("chart-timeline-country").style.display = tab === "by-country" ? "block" : "none";
-      if (tab === "by-country") refreshTimeline();
+      setTimeout(() => refreshTimeline(), 80);
     });
   });
 }
@@ -328,27 +328,52 @@ async function refreshTimeline() {
     "Strategic developments": "#888888",
   };
 
+  const annotations = [
+  { month: "2024-04", label: "Iran missiles" , color: "#d62728" , fontweight: "bold" },
+  { month: "2024-10", label: "Lebanon invasion" , color: "#ff7f0e", fontweight: "bold" },
+  { month: "2024-11", label: "Ceasefire talks" , color: "#2ca02c" , fontweight: "bold" },
+];
+
   const specType = {
-    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    data: { values: typeData.data },
-    mark: "bar",
-    encoding: {
-      x: { field: "year_month", type: "ordinal", title: "Month", axis: { labelAngle: -45 } },
-      y: { field: "count", type: "quantitative", title: "Events" },
-      color: {
-        field: "event_type", type: "nominal",
-        scale: { domain: Object.keys(EVENT_COLORS_VEGA), range: Object.values(EVENT_COLORS_VEGA) },
-        legend: { title: "Event type" },
+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+  data: { values: typeData.data },
+  resolve: { legend: { color: "independent" } },   // ← ADD THIS
+  layer: [
+    {
+      mark: { type: "area", interpolate: "monotone" },
+      encoding: {
+        x: { field: "year_month", type: "ordinal", title: "Month", axis: { labelAngle: -45 } },
+        y: { field: "count", type: "quantitative", stack: "center", axis: { title: "Events (relative scale)", format: "~s" } },
+        color: {
+          field: "event_type", type: "nominal",
+          scale: { domain: Object.keys(EVENT_COLORS_VEGA), range: Object.values(EVENT_COLORS_VEGA) },
+          legend: { title: "Event type" },          // ← legend stays here
+        },
+        tooltip: [
+          { field: "year_month", title: "Month" },
+          { field: "event_type", title: "Type" },
+          { field: "count", title: "Events" },
+        ],
       },
-      tooltip: [
-        { field: "year_month", title: "Month" },
-        { field: "event_type", title: "Type" },
-        { field: "count",      title: "Events" },
-      ],
     },
-    title: "Conflict events by month",
-    height: 240, width: "container",
-  };
+    {
+      data: { values: annotations },
+      mark: { type: "rule", color: "#333", strokeDash: [4, 3], strokeWidth: 1.5 },
+      encoding: { x: { field: "month", type: "ordinal" } },
+    },
+    {
+      data: { values: annotations },
+      mark: { type: "text", angle: -90, align: "right", dx: -4, fontSize: 11, color: "#333" },
+      encoding: {
+        x: { field: "month", type: "ordinal" },
+        y: { value: 20 },
+        text: { field: "label" },
+      },
+    },
+  ],
+  title: "Conflict events by month",
+  height: 260, width: "container",
+};
 
   const specCountry = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",

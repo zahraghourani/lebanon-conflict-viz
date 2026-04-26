@@ -350,11 +350,20 @@ def dotplot(
 
 @app.get("/api/sentiment")
 def sentiment():
-    posts = get_posts()
-    p = posts[["created_date", "sentiment"]].copy()
-    p["date"] = p["created_date"].dt.date
+    posts = get_posts()[["created_date", "sentiment"]].copy()
+    comments = get_comments()
+    # compute VADER on comments if not already there
+    if "sentiment" not in comments.columns:
+        from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+        sia = SentimentIntensityAnalyzer()
+        comments["sentiment"] = comments["body"].fillna("").apply(
+            lambda t: sia.polarity_scores(t)["compound"]
+        )
+    c = comments[["created_date", "sentiment"]].copy()
+    combined = pd.concat([posts, c], ignore_index=True)
+    combined["date"] = combined["created_date"].dt.date
     daily = (
-        p.groupby("date")
+        combined.groupby("date")
         .agg(avg_sentiment=("sentiment", "mean"), post_count=("sentiment", "count"))
         .reset_index()
         .sort_values("date")
@@ -362,7 +371,6 @@ def sentiment():
     daily["sentiment_7d"] = daily["avg_sentiment"].rolling(7, min_periods=1).mean()
     daily["date"] = daily["date"].astype(str)
     return {"data": daily.to_dict(orient="records")}
-
 
 @app.get("/api/volume")
 def volume():
