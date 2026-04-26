@@ -2,7 +2,7 @@
 
 **Bridging Physical and Digital Worlds: Visualizing the Middle East Conflict Through Spatial, Temporal, and Sentiment Data**
 
-An interactive web dashboard that combines 112,628 verified conflict events from ACLED with 23,708 Reddit posts and comments to create a unified visual narrative of the 2024–2025 Middle East conflict.
+An interactive web dashboard that combines 112,628 verified conflict events from ACLED with 23,708 Reddit posts and comments to create a unified visual narrative of the 2024–2025 Middle East conflict. 
 
 > **DSC 614 — Data Visualization · Lebanese American University · Spring 2026**  
 > **Author:** Zahra El Ghourani · zahra.elghourani@lau.edu
@@ -60,8 +60,8 @@ middle-east-conflict-viz/
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/zahraghourani/lebanon-conflict-viz.git
-cd lebanon-conflict-viz
+git clone https://github.com/zahraghourani/middleEast-conflict-viz.git
+cd middleEast-conflict-viz
 ```
 
 ### 2. Create a virtual environment
